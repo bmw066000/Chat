@@ -2,6 +2,8 @@ package com.ben.chat;
 
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -18,11 +20,11 @@ public class Login extends JFrame {
 	private JPanel contentPane;
 	private JTextField txtName;
 	private JTextField txtAddress;
-	private JLabel lblIpAddress;
 	private JTextField txtPort;
+	private JLabel lblIpAddress;
 	private JLabel lblPort;
-	private JLabel lbleg;
-	private JLabel lbleg_1;
+	private JLabel lblAddressDesc;
+	private JLabel lblPortDesc;
 
 	public Login() {
 		try {
@@ -75,19 +77,32 @@ public class Login extends JFrame {
 		lblPort.setBounds(129, 212, 34, 14);
 		contentPane.add(lblPort);
 		
-		lbleg = new JLabel("(eg. 192.168.0.2)");
-		lbleg.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
-		lbleg.setBounds(93, 166, 107, 14);
-		contentPane.add(lbleg);
+		lblAddressDesc = new JLabel("(eg. 192.168.0.2)");
+		lblAddressDesc.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
+		lblAddressDesc.setBounds(93, 166, 107, 14);
+		contentPane.add(lblAddressDesc);
 		
-		lbleg_1 = new JLabel("(eg. 8192)");
-		lbleg_1.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
-		lbleg_1.setBounds(112, 258, 69, 14);
-		contentPane.add(lbleg_1);
+		lblPortDesc = new JLabel("(eg. 8192)");
+		lblPortDesc.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
+		lblPortDesc.setBounds(112, 258, 69, 14);
+		contentPane.add(lblPortDesc);
 		
 		JButton btnLogin = new JButton("Login");
+		btnLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String name = txtName.getText();
+				String address = txtAddress.getText();
+				int port = Integer.parseInt(txtPort.getText());
+				login(name, address, port);
+			}
+		});
 		btnLogin.setBounds(102, 304, 89, 23);
 		contentPane.add(btnLogin);
+	}
+	
+	private void login(String name, String address, int port) {
+		dispose();
+		System.out.println(name + ", " + address + ", " + port);
 	}
 
 	public static void main(String[] args) {
