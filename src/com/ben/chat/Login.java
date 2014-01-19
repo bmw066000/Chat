@@ -67,6 +67,7 @@ public class Login extends JFrame {
 		contentPane.add(lblIpAddress);
 		
 		txtPort = new JTextField();
+		txtPort.setText("8192");
 		txtPort.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
 		txtPort.setColumns(10);
 		txtPort.setBounds(64, 230, 165, 24);
