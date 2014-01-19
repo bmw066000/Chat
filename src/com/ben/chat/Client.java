@@ -1,22 +1,24 @@
 package com.ben.chat;
 
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JButton;
-import java.awt.Insets;
-import javax.swing.JTextField;
-import java.awt.Font;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import javax.swing.text.DefaultCaret;
 
 public class Client extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -25,7 +27,8 @@ public class Client extends JFrame {
 	private String name, address;
 	private int port;
 	private JTextField txtMessage;
-	private JTextArea txtrHistory;
+	private JTextArea history;
+	private DefaultCaret caret;
 	
 	public Client(String name, String address, int port) {
 		setTitle("Chat Client");
@@ -58,16 +61,19 @@ public class Client extends JFrame {
 		gbl_contentPane.rowWeights = new double[]{1.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 		
-		txtrHistory = new JTextArea();
-		txtrHistory.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
-		txtrHistory.setEditable(false);
-		GridBagConstraints gbc_txtrHistory = new GridBagConstraints();
-		gbc_txtrHistory.fill = GridBagConstraints.BOTH;
-		gbc_txtrHistory.gridx = 1;
-		gbc_txtrHistory.gridy = 1;
-		gbc_txtrHistory.gridwidth = 2;
-		gbc_txtrHistory.insets = new Insets(0, 5, 0, 0);
-		contentPane.add(txtrHistory, gbc_txtrHistory);
+		history = new JTextArea();
+		history.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
+		history.setEditable(false);
+		JScrollPane scroll = new JScrollPane(history);
+		caret = (DefaultCaret) history.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		GridBagConstraints scrollConstraints = new GridBagConstraints();
+		scrollConstraints.fill = GridBagConstraints.BOTH;
+		scrollConstraints.gridx = 1;
+		scrollConstraints.gridy = 1;
+		scrollConstraints.gridwidth = 2;
+		scrollConstraints.insets = new Insets(0, 5, 0, 1);
+		contentPane.add(scroll, scrollConstraints);
 		
 		txtMessage = new JTextField();
 		txtMessage.addKeyListener(new KeyAdapter() {
@@ -112,7 +118,8 @@ public class Client extends JFrame {
 	}
 	
 	public void console(String message) {
-		txtrHistory.append(message + "\n\r");
+		history.append(message + "\n\r");
+		history.setCaretPosition(history.getDocument().getLength());
 	}
 
 }
