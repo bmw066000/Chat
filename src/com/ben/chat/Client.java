@@ -21,6 +21,7 @@ public class Client extends JFrame {
 	private String name, address;
 	private int port;
 	private JTextField txtMessage;
+	private JTextArea txtrHistory;
 	
 	public Client(String name, String address, int port) {
 		setTitle("Chat Client");
@@ -28,6 +29,7 @@ public class Client extends JFrame {
 		this.address = address;
 		this.port = port;
 		createWindow();
+		console("Attempting a connection to " + address + ":" + port + ", user: " + name);
 	}
 	
 	private void createWindow() {
@@ -52,7 +54,7 @@ public class Client extends JFrame {
 		gbl_contentPane.rowWeights = new double[]{1.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 		
-		JTextArea txtrHistory = new JTextArea();
+		txtrHistory = new JTextArea();
 		txtrHistory.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
 		txtrHistory.setEditable(false);
 		GridBagConstraints gbc_txtrHistory = new GridBagConstraints();
@@ -82,6 +84,12 @@ public class Client extends JFrame {
 		contentPane.add(btnSend, gbc_btnSend);
 		
 		setVisible(true);
+		
+		txtMessage.requestFocusInWindow();
+	}
+	
+	public void console(String message) {
+		txtrHistory.append(message + "\n\r");
 	}
 
 }
