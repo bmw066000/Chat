@@ -39,13 +39,14 @@ public class Client extends JFrame {
 	private DatagramSocket socket;
 	private InetAddress ip;
 	
+	private Thread send;
+	
 	public Client(String name, String address, int port) {
 		setTitle("Chat Client");
 		this.name = name;
 		this.address = address;
 		this.port = port;
-		boolean connected = openConnection(address, port);
-		if (!connected) {
+		if (!openConnection(address, port)) {
 			System.err.println("Connection failed!");
 			console("Connection failed!");
 		}
@@ -72,7 +73,20 @@ public class Client extends JFrame {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return new String(packet.getData());
+		return (new String(packet.getData()));
+	}
+	
+	private void send(final byte[] data) {
+		send = new Thread("Send") {
+			public void run() {
+				try {
+					socket.send(new DatagramPacket(data, data.length, ip, port));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		send.start();
 	}
 	
 	private void createWindow() {
@@ -150,8 +164,7 @@ public class Client extends JFrame {
 	
 	private void send(String message) {
 		if (message.equals("")) return;
-		message = name + ": " + message;
-		console(message);
+		console(name + ": " + message);
 		txtMessage.setText("");
 	}
 	
