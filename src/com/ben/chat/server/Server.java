@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class Server implements Runnable {
 	
@@ -58,9 +59,6 @@ public class Server implements Runnable {
 						e.printStackTrace();
 					}
 					process(packet);
-					
-					clients.add(new ServerClient("Ben", packet.getAddress(), packet.getPort(), 50));
-					System.out.println(clients.get(0).address.toString() + ":" + clients.get(0).port);
 				}
 			}
 		};
@@ -70,7 +68,7 @@ public class Server implements Runnable {
 	private void process(DatagramPacket packet) {
 		String string = new String(packet.getData());
 		if (string.startsWith("/c/")) {
-			clients.add(new ServerClient(string.substring(3).trim(), packet.getAddress(), packet.getPort(), 50));
+			clients.add(new ServerClient(string.substring(3).trim(), packet.getAddress(), packet.getPort(), UUID.randomUUID()));
 		} else {
 			System.out.println(string.trim());
 		}
