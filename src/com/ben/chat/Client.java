@@ -91,6 +91,19 @@ public class Client extends JFrame {
 		send.start();
 	}
 	
+	private void send(String message) {
+		if (message.equals("")) return;
+		message = name + ": " + message;
+		console(message);
+		send(("/m/" + message).getBytes());
+		txtMessage.setText("");
+	}
+	
+	public void console(String message) {
+		history.append(message + "\n\r");
+		history.setCaretPosition(history.getDocument().getLength());
+	}
+	
 	private void createWindow() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -162,19 +175,6 @@ public class Client extends JFrame {
 		setVisible(true);
 
 		txtMessage.requestFocusInWindow();
-	}
-	
-	private void send(String message) {
-		if (message.equals("")) return;
-		message = name + ": " + message;
-		console(message);
-		send(message.getBytes());
-		txtMessage.setText("");
-	}
-	
-	public void console(String message) {
-		history.append(message + "\n\r");
-		history.setCaretPosition(history.getDocument().getLength());
 	}
 
 }
