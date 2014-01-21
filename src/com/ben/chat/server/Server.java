@@ -90,8 +90,10 @@ public class Server implements Runnable {
 	private void process(DatagramPacket packet) {
 		String string = new String(packet.getData());
 		if (string.startsWith("/c/")) {
-			clients.add(new ServerClient(string.substring(3).trim(), packet.getAddress(), packet.getPort(), UUID.randomUUID()));
+			UUID id = UUID.randomUUID();
+			clients.add(new ServerClient(string.substring(3).trim(), packet.getAddress(), packet.getPort(), id));
 			System.out.println(clients.get(clients.size() - 1).name + " connected from " + packet.getAddress() + ":" + packet.getPort());
+			send(("/c/" + id).getBytes(), packet.getAddress(), packet.getPort());
 		} else if (string.startsWith("/m/")){
 			sendToAll(string);
 		} else {

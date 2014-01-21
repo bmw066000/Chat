@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.UUID;
 
 public class Client {
 	private DatagramSocket socket;
@@ -14,6 +15,7 @@ public class Client {
 	private int port;
 	private InetAddress ip;
 	private Thread send;
+	public UUID ID;
 
 	public Client(String name, String address, int port) {
 		this.name = name;
@@ -40,7 +42,8 @@ public class Client {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return (new String(packet.getData()));
+		String message = new String(packet.getData());
+		return (message);
 	}
 	
 	public void send(final byte[] data) {
@@ -66,6 +69,14 @@ public class Client {
 	
 	public int getPort() {
 		return port;
+	}
+
+	public void setID(String uuid) {
+		this.ID = UUID.fromString(uuid.trim());
+	}
+	
+	public UUID getID() {
+		return ID;
 	}
 	
 }
