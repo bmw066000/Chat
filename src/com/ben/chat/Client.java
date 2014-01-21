@@ -43,10 +43,15 @@ public class Client {
 			e.printStackTrace();
 		}
 		String message = new String(packet.getData());
-		return (message);
+		return (message.substring(0, message.lastIndexOf("/e/")));
 	}
 	
-	public void send(final byte[] data) {
+	public void send(String message) {
+		message += "/e/";
+		send(message.getBytes());
+	}
+	
+	private void send(final byte[] data) {
 		send = new Thread("Send") {
 			public void run() {
 				try {
@@ -72,7 +77,7 @@ public class Client {
 	}
 
 	public void setID(String uuid) {
-		this.ID = UUID.fromString(uuid.trim());
+		this.ID = UUID.fromString(uuid);
 	}
 	
 	public UUID getID() {

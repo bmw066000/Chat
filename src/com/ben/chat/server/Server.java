@@ -87,17 +87,24 @@ public class Server implements Runnable {
 		send.start();
 	}
 	
+	private void send(String message, InetAddress address, int port) {
+		message += "/e/";
+		send(message.getBytes(), address, port);
+	}
+	
 	private void process(DatagramPacket packet) {
 		String string = new String(packet.getData());
+		System.out.println(string);
+		string = string.substring(0, string.lastIndexOf("/e/"));
 		if (string.startsWith("/c/")) {
 			UUID id = UUID.randomUUID();
-			clients.add(new ServerClient(string.substring(3).trim(), packet.getAddress(), packet.getPort(), id));
+			clients.add(new ServerClient(string.substring(3), packet.getAddress(), packet.getPort(), id));
 			System.out.println(clients.get(clients.size() - 1).name + " connected from " + packet.getAddress() + ":" + packet.getPort());
-			send(("/c/" + id).getBytes(), packet.getAddress(), packet.getPort());
+			send("/c/" + id, packet.getAddress(), packet.getPort());
 		} else if (string.startsWith("/m/")){
 			sendToAll(string);
 		} else {
-			System.out.println(string.trim());
+			System.out.println(string);
 		}
 	}
 	
