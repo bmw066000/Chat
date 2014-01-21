@@ -69,7 +69,7 @@ public class Server implements Runnable {
 	private void sendToAll(String message) {
 		for (int i = 0; i < clients.size(); i++) {
 			ServerClient client = clients.get(i);
-			send(message.getBytes(), client.address, client.port);
+			send(message, client.address, client.port);
 		}
 	}
 	
@@ -94,7 +94,6 @@ public class Server implements Runnable {
 	
 	private void process(DatagramPacket packet) {
 		String string = new String(packet.getData());
-		System.out.println(string);
 		string = string.substring(0, string.lastIndexOf("/e/"));
 		if (string.startsWith("/c/")) {
 			UUID id = UUID.randomUUID();

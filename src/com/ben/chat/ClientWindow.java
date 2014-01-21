@@ -53,7 +53,6 @@ public class ClientWindow extends JFrame implements Runnable {
 	private void send(String message) {
 		if (message.equals("")) return;
 		message = client.getName() + ": " + message;
-		console(message);
 		client.send("/m/" + message);
 		txtMessage.setText("");
 	}
@@ -66,6 +65,8 @@ public class ClientWindow extends JFrame implements Runnable {
 					if (message.startsWith("/c/")) {
 						client.setID(message.substring(3));
 						console("Successfully connected to server.");
+					} else if (message.startsWith("/m/")) {
+						console(message.substring(3));
 					}
 				}
 			}
