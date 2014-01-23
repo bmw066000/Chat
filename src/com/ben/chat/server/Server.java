@@ -102,9 +102,30 @@ public class Server implements Runnable {
 			send("/c/" + id, packet.getAddress(), packet.getPort());
 		} else if (string.startsWith("/m/")){
 			sendToAll(string);
+		} else if (string.startsWith("/d/")) {
+			String id = string.substring(3);
+			disconnect(UUID.fromString(id), true);
 		} else {
 			System.out.println(string);
 		}
+	}
+	
+	private void disconnect(UUID id, boolean status) {
+		ServerClient c = null;
+		for (int i = 0; i < clients.size(); i++) {
+			if (clients.get(i).getID().equals(id)) {
+				c = clients.get(i);
+				clients.remove(i);
+				break;
+			}
+		}
+		String message = "Client " + c.name + " (" + c.getID() + ") @ " + c.address + ":" + c.port;
+		if (status) {
+			message += " disconnected.";
+		} else {
+			message += " timed out.";
+		}
+		System.out.println(message);
 	}
 	
 }

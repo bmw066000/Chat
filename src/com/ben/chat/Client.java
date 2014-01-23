@@ -1,5 +1,7 @@
 package com.ben.chat;
 
+// TODO: Convert all messages to JSON.
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -62,6 +64,18 @@ public class Client {
 			}
 		};
 		send.start();
+	}
+	
+	public void close() {
+		new Thread() {
+			public void run() {
+				String disconnect = "/d/" + ID;
+				send(disconnect);
+				synchronized(socket) {
+					socket.close();
+				}
+			}
+		}.start();
 	}
 	
 	public String getName() {

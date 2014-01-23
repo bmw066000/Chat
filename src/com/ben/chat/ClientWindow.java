@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -146,6 +148,13 @@ public class ClientWindow extends JFrame implements Runnable {
 		gbc_btnSend.gridx = 2;
 		gbc_btnSend.gridy = 2;
 		contentPane.add(btnSend, gbc_btnSend);
+		
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				client.close();
+				running = false;
+			}
+		});
 		
 		setVisible(true);
 
