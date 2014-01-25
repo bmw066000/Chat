@@ -69,6 +69,8 @@ public class ClientWindow extends JFrame implements Runnable {
 						console("Successfully connected to server.");
 					} else if (message.startsWith("/m/")) {
 						console(message.substring(3));
+					} else if (message.startsWith("/i/")) {
+						client.send("/i/" + client.getID());
 					}
 				}
 			}
