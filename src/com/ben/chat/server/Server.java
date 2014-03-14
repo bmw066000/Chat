@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
+import com.ben.chat.Message;
+import com.ben.chat.Message.Type;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class Server implements Runnable {
 	
 	private List<ServerClient> clients = new ArrayList<>();
@@ -20,6 +25,7 @@ public class Server implements Runnable {
 	private boolean running = false;
 	private Thread run, manage, send, receive;
 	private boolean raw = false;
+	private static ObjectMapper om;
 	
 	private final int MAX_ATTEMPTS = 5;
 	
@@ -31,6 +37,7 @@ public class Server implements Runnable {
 			e.printStackTrace();
 			return;
 		}
+		om = new ObjectMapper();
 		run = new Thread(this, "Server");
 		run.start();
 	}
@@ -44,7 +51,8 @@ public class Server implements Runnable {
 		while (running) {
 			String text = scanner.nextLine();
 			if (!text.startsWith("/")) {
-				sendToAll("/m/Server: " + text);
+				sendToAll(new Message.Builder().setMessageType(Type.message)
+											   .setContent(text.getBytes()).build());
 				continue;
 			}
 			text = text.substring(1);
@@ -58,6 +66,33 @@ public class Server implements Runnable {
 					System.out.println(c.name + "(" + c.getID() + "): " + c.address + ":" + c.port);
 				}
 				System.out.println("========");
+			} else if (text.startsWith("kick")) {
+				String name = text.split(" ")[1];
+				UUID id = null;
+				try {
+					id = UUID.fromString(name);
+				} catch(IllegalArgumentException e) {
+					
+				}
+				if (id != null) {
+					boolean exists = false;
+					for (int i = 0; i < clients.size(); i++) {
+						if (clients.get(i).getID().equals(id)) {
+							exists = true;
+							break;
+						}
+					}
+					if (exists) disconnect(id, true);
+					else System.out.println("Client " + id + " doesn't exist. Check ID.");
+				} else {
+					for (int i = 0; i < clients.size(); i++) {
+						ServerClient c = clients.get(i);
+						if (name.equals(c.name)) {
+							disconnect(c.getID(), true);
+							break;
+						}
+					}
+				}
 			}
 		}
 		scanner.close();
@@ -67,7 +102,8 @@ public class Server implements Runnable {
 		manage = new Thread("Manage") {
 			public void run() {
 				while (running) {
-					sendToAll("/i/server");
+					sendToAll(new Message.Builder().setMessageType(Type.ping)
+												   .setContent("Server".getBytes()).build());
 					try {
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
@@ -103,16 +139,20 @@ public class Server implements Runnable {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					process(packet);
+					try {
+						process(packet);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		};
 		receive.start();
 	}
 	
-	private void sendToAll(String message) {
-		if (message.startsWith("/m/")) {
-			System.out.println(message.substring(3));
+	private void sendToAll(Message message) {
+		if (message.getType() == Type.message) {
+			System.out.println(message.getContentString());
 		}
 		for (int i = 0; i < clients.size(); i++) {
 			ServerClient client = clients.get(i);
@@ -134,29 +174,30 @@ public class Server implements Runnable {
 		send.start();
 	}
 	
-	private void send(String message, InetAddress address, int port) {
-		message += "/e/";
-		send(message.getBytes(), address, port);
+	private void send(Message message, InetAddress address, int port) {
+		try {
+			send(om.writeValueAsBytes(message), address, port);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 	
-	private void process(DatagramPacket packet) {
-		String string = new String(packet.getData());
-		if (raw) System.out.println(string);
-		string = string.substring(0, string.lastIndexOf("/e/"));
-		if (string.startsWith("/c/")) {
+	private void process(DatagramPacket packet) throws IOException {
+		Message m = om.readValue(packet.getData(), Message.class);
+		if (raw) System.out.println(m.getTypeString() + m.getContentString());
+		switch(m.getType()) {
+		case connect:
 			UUID id = UUID.randomUUID();
-			clients.add(new ServerClient(string.substring(3), packet.getAddress(), packet.getPort(), id));
+			clients.add(new ServerClient(m.getContentString(), packet.getAddress(), packet.getPort(), id));
 			System.out.println(clients.get(clients.size() - 1).name + " connected from " + packet.getAddress() + ":" + packet.getPort());
-			send("/c/" + id, packet.getAddress(), packet.getPort());
-		} else if (string.startsWith("/m/")){
-			sendToAll(string);
-		} else if (string.startsWith("/d/")) {
-			String id = string.substring(3);
-			disconnect(UUID.fromString(id), true);
-		} else if (string.startsWith("/i/")) {
-			clientResponse.add(UUID.fromString(string.substring(3)));
-		} else {
-			System.out.println(string);
+			send(new Message.Builder().setMessageType(Type.connect)
+					.setContent(id.toString().getBytes()).build(),
+					packet.getAddress(), packet.getPort());
+			break;
+		case message: sendToAll(m); break;
+		case disconnect: disconnect(UUID.fromString(m.getContentString()), true); break;
+		case ping: clientResponse.add(UUID.fromString(m.getContentString())); break;
+		default: System.out.println(m.getContentString());
 		}
 	}
 	

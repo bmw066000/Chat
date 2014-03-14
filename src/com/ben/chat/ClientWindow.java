@@ -1,5 +1,6 @@
 package com.ben.chat;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -10,6 +11,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -42,7 +44,8 @@ public class ClientWindow extends JFrame implements Runnable {
 		}
 		createWindow();
 		console("Attempting a connection to " + address + ":" + port + ", user: " + name);
-		client.send("/c/" + name);
+		client.send(new Message.Builder().setMessageType(Message.Type.connect)
+										 .setContent(name.getBytes()).build());
 		running = true;
 		run = new Thread(this, "Running");
 		run.start();
@@ -55,22 +58,33 @@ public class ClientWindow extends JFrame implements Runnable {
 	private void send(String message) {
 		if (message.equals("")) return;
 		message = client.getName() + ": " + message;
-		client.send("/m/" + message);
-		txtMessage.setText("");
+		client.send(new Message.Builder().setMessageType(Message.Type.message)
+										 .setContent(message.getBytes()).build());
 	}
 	
 	public void listen() {
 		listen = new Thread("Listen") {
 			public void run() {
 				while (running) {
-					String message = client.receive();
-					if (message.startsWith("/c/")) {
-						client.setID(message.substring(3));
+					Message message = null;
+					try {
+						message = client.receive();
+					} catch (IOException e) {
+						continue;
+					}
+					switch (message.getType()) {
+					case connect:
+						client.setID(message.getContentString());
 						console("Successfully connected to server.");
-					} else if (message.startsWith("/m/")) {
-						console(message.substring(3));
-					} else if (message.startsWith("/i/")) {
-						client.send("/i/" + client.getID());
+						break;
+					case disconnect:
+						break;
+					case message: console(message.getContentString()); break;
+					case ping: client.send(new Message.Builder().setMessageType(Message.Type.ping)
+																.setContent(client.getID().toString().getBytes()).build());
+						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -125,6 +139,7 @@ public class ClientWindow extends JFrame implements Runnable {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					send(txtMessage.getText());
+					txtMessage.setText("");
 				}
 			}
 		});
@@ -142,6 +157,8 @@ public class ClientWindow extends JFrame implements Runnable {
 		btnSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				send(txtMessage.getText());
+				txtMessage.setText("");
+				txtMessage.requestFocus();
 			}
 		});
 		btnSend.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));

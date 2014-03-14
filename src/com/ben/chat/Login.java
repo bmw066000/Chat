@@ -4,6 +4,8 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,6 +47,15 @@ public class Login extends JFrame {
 		contentPane.setLayout(null);
 		
 		txtName = new JTextField();
+		txtName.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					if (!(txtName.getText().equals(""))) {
+						login(txtName.getText(), txtAddress.getText(), Integer.parseInt(txtPort.getText()));
+					}
+				}
+			}
+		});
 		txtName.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 13));
 		txtName.setBounds(64, 46, 165, 24);
 		contentPane.add(txtName);

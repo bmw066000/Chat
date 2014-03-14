@@ -10,6 +10,10 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
+import com.ben.chat.Message.Type;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class Client {
 	private DatagramSocket socket;
 	
@@ -17,12 +21,14 @@ public class Client {
 	private int port;
 	private InetAddress ip;
 	private Thread send;
+	private static ObjectMapper om;
 	public UUID ID;
 
 	public Client(String name, String address, int port) {
 		this.name = name;
 		this.address = address;
 		this.port = port;
+		om = new ObjectMapper();
 	}
 
 	public boolean openConnection(String address) {
@@ -36,7 +42,7 @@ public class Client {
 		return true;
 	}
 	
-	public String receive() {
+	public Message receive() throws IOException {
 		byte[] data = new byte[1024];
 		DatagramPacket packet = new DatagramPacket(data, data.length);
 		try {
@@ -44,13 +50,16 @@ public class Client {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String message = new String(packet.getData());
-		return (message.substring(0, message.lastIndexOf("/e/")));
+		Message message = om.readValue(packet.getData(), Message.class);
+		return message;
 	}
 	
-	public void send(String message) {
-		message += "/e/";
-		send(message.getBytes());
+	public void send(Message message) {
+		try {
+			send(om.writeValueAsBytes(message));
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void send(final byte[] data) {
@@ -69,8 +78,8 @@ public class Client {
 	public void close() {
 		new Thread() {
 			public void run() {
-				String disconnect = "/d/" + ID;
-				send(disconnect);
+				send(new Message.Builder().setMessageType(Type.disconnect)
+										  .setContent(ID.toString().getBytes()).build());
 				synchronized(socket) {
 					socket.close();
 				}
