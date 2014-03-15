@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public final class Message {
 
 	public enum Type {
-		message, connect, disconnect, ping;
+		message, connect, disconnect, ping, user;
 	};
 	
 	public byte[] content;
@@ -65,6 +65,7 @@ public final class Message {
 			case disconnect: return "Disconnect: "; 
 			case message: return "Message: ";
 			case ping: return "Ping";
+			case user: return "User";
 			default: return null;
 		}
 	}

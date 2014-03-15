@@ -104,6 +104,7 @@ public class Server implements Runnable {
 				while (running) {
 					sendToAll(new Message.Builder().setMessageType(Type.ping)
 												   .setContent("Server".getBytes()).build());
+					sendStatus();
 					try {
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
@@ -126,6 +127,16 @@ public class Server implements Runnable {
 			}
 		};
 		manage.start();
+	}
+	
+	private void sendStatus() {
+		if (clients.size() <= 0) return;
+		String users = "";
+		for (int i = 0; i < clients.size(); i++) {
+			users += clients.get(i).name + "\n";
+		}
+		sendToAll(new Message.Builder().setMessageType(Type.user)
+									   .setContent(users.getBytes()).build());
 	}
 	
 	private void receive() {

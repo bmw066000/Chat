@@ -1,7 +1,5 @@
 package com.ben.chat;
 
-// TODO: Convert all messages to JSON.
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
