@@ -23,6 +23,9 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 
+import com.ben.chat.shared.Message;
+import com.ben.chat.shared.MessageOperations;
+
 public class ClientWindow extends JFrame implements Runnable {
 	private static final long serialVersionUID = 1L;
 	
@@ -33,12 +36,14 @@ public class ClientWindow extends JFrame implements Runnable {
 	private Thread run, listen;
 	private Client client;
 	private boolean running = false;
+	private static MessageOperations messageOps;
 	
 	private OnlineUsers users;
 	
 	public ClientWindow(String name, String address, int port) {
 		setTitle("Chat Client");
 		client = new Client(name, address, port);
+		messageOps = new MessageOperations();
 		if (!client.openConnection(address)) {
 			System.err.println("Connection failed!");
 			console("Connection failed!");
@@ -76,18 +81,17 @@ public class ClientWindow extends JFrame implements Runnable {
 					}
 					switch (message.getType()) {
 					case connect:
-						client.setID(message.getContentString());
+						client.setID(messageOps.getContentString(message));
 						console("Successfully connected to server.");
 						break;
 					case disconnect:
 						break;
-					case message: console(message.getContentString()); break;
+					case message: console(messageOps.getContentString(message)); break;
 					case ping: client.send(new Message.Builder().setMessageType(Message.Type.ping)
 																.setContent(client.getID().toString().getBytes()).build());
 						break;
 					case user: 
-						String[] u = message.getContentString().split("\n");
-						System.out.println(u[0]);
+						String[] u = messageOps.getContentString(message).split("\n");
 						users.update(u);
 						break;
 					default:

@@ -8,7 +8,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
-import com.ben.chat.Message.Type;
+import com.ben.chat.shared.Message;
+import com.ben.chat.shared.Message.Type;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

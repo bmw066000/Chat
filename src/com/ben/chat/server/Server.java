@@ -10,8 +10,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
-import com.ben.chat.Message;
-import com.ben.chat.Message.Type;
+import com.ben.chat.shared.Message;
+import com.ben.chat.shared.MessageOperations;
+import com.ben.chat.shared.Message.Type;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +27,7 @@ public class Server implements Runnable {
 	private Thread run, manage, send, receive;
 	private boolean raw = false;
 	private static ObjectMapper om;
+	private static MessageOperations messageOps;
 	
 	private final int MAX_ATTEMPTS = 5;
 	
@@ -38,6 +40,7 @@ public class Server implements Runnable {
 			return;
 		}
 		om = new ObjectMapper();
+		messageOps = new MessageOperations();
 		run = new Thread(this, "Server");
 		run.start();
 	}
@@ -163,7 +166,7 @@ public class Server implements Runnable {
 	
 	private void sendToAll(Message message) {
 		if (message.getType() == Type.message) {
-			System.out.println(message.getContentString());
+			System.out.println(messageOps.getContentString(message));
 		}
 		for (int i = 0; i < clients.size(); i++) {
 			ServerClient client = clients.get(i);
@@ -186,6 +189,11 @@ public class Server implements Runnable {
 	}
 	
 	private void send(Message message, InetAddress address, int port) {
+		// TODO: AES Encryption here (or RC4 ?)
+		// could use AES only on the content and use RC4 to send the packet
+		// TODO: Compute if the message will be greater than 1024
+		// and adjust partsLeft as required; possibly use an array list to determine
+		// how many messages will be sent (taking into account boilerplate info)
 		try {
 			send(om.writeValueAsBytes(message), address, port);
 		} catch (JsonProcessingException e) {
@@ -195,20 +203,20 @@ public class Server implements Runnable {
 	
 	private void process(DatagramPacket packet) throws IOException {
 		Message m = om.readValue(packet.getData(), Message.class);
-		if (raw) System.out.println(m.getTypeString() + m.getContentString());
+		if (raw) System.out.println(messageOps.getTypeString(m) + ": " + messageOps.getContentString(m));
 		switch(m.getType()) {
 		case connect:
-			UUID id = UUID.randomUUID();
-			clients.add(new ServerClient(m.getContentString(), packet.getAddress(), packet.getPort(), id));
-			System.out.println(clients.get(clients.size() - 1).name + " connected from " + packet.getAddress() + ":" + packet.getPort());
+			ServerClient c = new ServerClient(messageOps.getContentString(m), packet.getAddress(), packet.getPort(), UUID.randomUUID());
+			clients.add(c);
+			System.out.println(c.name + " connected from " + packet.getAddress() + ":" + packet.getPort());
 			send(new Message.Builder().setMessageType(Type.connect)
-					.setContent(id.toString().getBytes()).build(),
+					.setContent(c.getID().toString().getBytes()).build(),
 					packet.getAddress(), packet.getPort());
 			break;
 		case message: sendToAll(m); break;
-		case disconnect: disconnect(UUID.fromString(m.getContentString()), true); break;
-		case ping: clientResponse.add(UUID.fromString(m.getContentString())); break;
-		default: System.out.println(m.getContentString());
+		case disconnect: disconnect(UUID.fromString(messageOps.getContentString(m)), true); break;
+		case ping: clientResponse.add(UUID.fromString(messageOps.getContentString(m))); break;
+		default: System.out.println(messageOps.getContentString(m));
 		}
 	}
 	
