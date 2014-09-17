@@ -1,4 +1,4 @@
-package com.ben.chat;
+package com.ben.chat.client;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

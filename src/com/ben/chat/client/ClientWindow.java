@@ -1,4 +1,4 @@
-package com.ben.chat;
+package com.ben.chat.client;
 
 import java.awt.Font;
 import java.awt.GridBagConstraints;
