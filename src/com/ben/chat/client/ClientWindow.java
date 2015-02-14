@@ -63,23 +63,49 @@ public class ClientWindow extends JFrame implements Runnable {
 	}
 	
 	private void send(String message) {
-		if (message.equals("")) return;
+		if (message.equals(""))
+		{
+			return;
+		}
+		if (message.startsWith("/"))
+		{
+			message = message.substring(1) + " " + client.getName();
+			client.send(new Message.Builder().setMessageType(Message.Type.control)
+											 .setContent(message.getBytes()).build());
+			return;
+		}
 		message = client.getName() + ": " + message;
 		client.send(new Message.Builder().setMessageType(Message.Type.message)
 										 .setContent(message.getBytes()).build());
 	}
 	
+	private void doOps(Message message)
+	{
+		String[] info = messageOps.getContentString(message).split(" ");
+		if (info[0].equals("name"))
+		{
+			client.setName(info[1]);
+		}
+	}
+	
 	public void listen() {
-		listen = new Thread("Listen") {
-			public void run() {
-				while (running) {
+		listen = new Thread("Listen")
+		{
+			public void run()
+			{
+				while (running)
+				{
 					Message message = null;
-					try {
+					try
+					{
 						message = client.receive();
-					} catch (IOException e) {
+					}
+					catch (IOException e)
+					{
 						continue;
 					}
-					switch (message.getType()) {
+					switch (message.getType())
+					{
 					case connect:
 						client.setID(messageOps.getContentString(message));
 						console("Successfully connected to server.");
@@ -89,6 +115,9 @@ public class ClientWindow extends JFrame implements Runnable {
 					case message: console(messageOps.getContentString(message)); break;
 					case ping: client.send(new Message.Builder().setMessageType(Message.Type.ping)
 																.setContent(client.getID().toString().getBytes()).build());
+						break;
+					case control:
+						doOps(message);
 						break;
 					case user: 
 						String[] u = messageOps.getContentString(message).split("\n");
@@ -103,16 +132,21 @@ public class ClientWindow extends JFrame implements Runnable {
 		listen.start();
 	}
 	
-	public void console(String message) {
+	public void console(String message)
+	{
 		history.append(message + "\n\r");
 		history.setCaretPosition(history.getDocument().getLength());
 	}
 	
-	private void createWindow() {
-		try {
+	private void createWindow()
+	{
+		try
+		{
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException | InstantiationException
-				| IllegalAccessException | UnsupportedLookAndFeelException e) {
+		}
+		catch (ClassNotFoundException | InstantiationException
+			 | IllegalAccessException | UnsupportedLookAndFeelException e)
+		{
 			e.printStackTrace();
 		}
 		
@@ -146,9 +180,12 @@ public class ClientWindow extends JFrame implements Runnable {
 		contentPane.add(scroll, scrollConstraints);
 		
 		txtMessage = new JTextField();
-		txtMessage.addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+		txtMessage.addKeyListener(new KeyAdapter()
+		{
+			public void keyPressed(KeyEvent e)
+			{
+				if (e.getKeyCode() == KeyEvent.VK_ENTER)
+				{
 					send(txtMessage.getText());
 					txtMessage.setText("");
 				}
@@ -166,8 +203,10 @@ public class ClientWindow extends JFrame implements Runnable {
 		txtMessage.setColumns(10);
 		
 		JButton btnSend = new JButton("Send");
-		btnSend.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		btnSend.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
 				send(txtMessage.getText());
 				txtMessage.setText("");
 				txtMessage.requestFocus();
@@ -182,8 +221,10 @@ public class ClientWindow extends JFrame implements Runnable {
 		gbc_btnSend.weighty = 0;
 		contentPane.add(btnSend, gbc_btnSend);
 		
-		addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
+		addWindowListener(new WindowAdapter()
+		{
+			public void windowClosing(WindowEvent e)
+			{
 				client.close();
 				running = false;
 			}
@@ -193,5 +234,4 @@ public class ClientWindow extends JFrame implements Runnable {
 
 		txtMessage.requestFocusInWindow();
 	}
-
 }

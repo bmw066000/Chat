@@ -5,7 +5,7 @@ import java.util.Objects;
 public final class Message {
 
 	public enum Type {
-		message, connect, disconnect, ping, user;
+		message, connect, disconnect, ping, user, control;
 	};
 	
 	public byte[] content;
@@ -16,7 +16,7 @@ public final class Message {
 	}
 	
 	public Message(Type type, byte[] content, int partsLeft) {
-		if (type == null || ((type == Type.connect || type == Type.disconnect || type == Type.message) && content == null)) {
+		if (type == null || ((type == Type.control || type == Type.connect || type == Type.disconnect || type == Type.message) && content == null)) {
 			System.err.println("type:" + type + ", content:" + content);
 			throw new IllegalArgumentException("null parameter in Message(...)");
 		}

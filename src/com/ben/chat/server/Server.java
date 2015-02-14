@@ -61,7 +61,14 @@ public class Server implements Runnable {
 			text = text.substring(1);
 			if (text.equals("raw")) {
 				raw = !raw;
-			} else if (text.equals("clients")) {
+			}
+			else if (text.equals("exit"))
+			{
+				System.out.println("Shutting down...");
+				System.exit(0);
+			}
+			else if (text.equals("clients"))
+			{
 				System.out.println("Clients:");
 				System.out.println("========");
 				for (int i = 0; i < clients.size(); i++) {
@@ -174,13 +181,19 @@ public class Server implements Runnable {
 		}
 	}
 	
-	private void send(final byte[] data, final InetAddress address, final int port) {
-		send = new Thread("Send") {
-			public void run() {
+	private void send(final byte[] data, final InetAddress address, final int port)
+	{
+		send = new Thread("Send")
+		{
+			public void run()
+			{
 				DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-				try {
+				try
+				{
 					socket.send(packet);
-				} catch (IOException e) {
+				}
+				catch (IOException e)
+				{
 					e.printStackTrace();
 				}
 			}
@@ -188,23 +201,58 @@ public class Server implements Runnable {
 		send.start();
 	}
 	
-	private void send(Message message, InetAddress address, int port) {
+	private void send(Message message, InetAddress address, int port)
+	{
 		// TODO: AES Encryption here (or RC4 ?)
 		// could use AES only on the content and use RC4 to send the packet
 		// TODO: Compute if the message will be greater than 1024
 		// and adjust partsLeft as required; possibly use an array list to determine
 		// how many messages will be sent (taking into account boilerplate info)
-		try {
+		try
+		{
 			send(om.writeValueAsBytes(message), address, port);
-		} catch (JsonProcessingException e) {
+		} catch (JsonProcessingException e)
+		{
 			e.printStackTrace();
 		}
 	}
 	
-	private void process(DatagramPacket packet) throws IOException {
+	private void doOps(Message message)
+	{
+		String text = messageOps.getContentString(message);
+		if (text.startsWith(("alias")))
+		{
+			String[] userInfo = text.split(" ");
+			if (userInfo[0].equals(userInfo[2]))
+			{
+				return;
+			}
+			for (int i = 0; i < clients.size(); i++)
+			{
+				ServerClient c = clients.get(i);
+				if (c.name.equals(userInfo[2]))
+				{
+					c.name = userInfo[1];
+					String content = userInfo[2] + " is now known as " + c.name + ".";
+					sendToAll(new Message.Builder().setMessageType(Type.message).setContent(content.getBytes()).build());
+					send(new Message.Builder().setMessageType(Type.control)
+											  .setContent(("name " + c.name).getBytes()).build(),
+											  c.address, c.port);
+					return;
+				}
+			}
+		}
+	}
+	
+	private void process(DatagramPacket packet) throws IOException
+	{
 		Message m = om.readValue(packet.getData(), Message.class);
 		if (raw) System.out.println(messageOps.getTypeString(m) + ": " + messageOps.getContentString(m));
-		switch(m.getType()) {
+		switch(m.getType())
+		{
+		case control:
+			doOps(m);
+			break;
 		case connect:
 			ServerClient c = new ServerClient(messageOps.getContentString(m), packet.getAddress(), packet.getPort(), UUID.randomUUID());
 			clients.add(c);
@@ -220,20 +268,27 @@ public class Server implements Runnable {
 		}
 	}
 	
-	private void disconnect(UUID id, boolean status) {
+	private void disconnect(UUID id, boolean status)
+	{
 		ServerClient c = null;
-		for (int i = 0; i < clients.size(); i++) {
-			if (clients.get(i).getID().equals(id)) {
+		for (int i = 0; i < clients.size(); i++)
+		{
+			if (clients.get(i).getID().equals(id))
+			{
 				c = clients.get(i);
 				clients.remove(i);
 				break;
 			}
 		}
-		if (c != null) {
+		if (c != null)
+		{
 			String message = "Client " + c.name + " (" + c.getID() + ") @ " + c.address + ":" + c.port;
-			if (status) {
+			if (status)
+			{
 				message += " disconnected.";
-			} else {
+			}
+			else
+			{
 				message += " timed out.";
 			}
 			System.out.println(message);
