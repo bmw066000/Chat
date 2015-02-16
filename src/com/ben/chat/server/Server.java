@@ -16,7 +16,8 @@ import com.ben.chat.shared.Message.Type;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class Server implements Runnable {
+public class Server implements Runnable
+{
 	
 	private List<ServerClient> clients = new ArrayList<>();
 	private List<UUID> clientResponse = new ArrayList<>();
@@ -31,11 +32,15 @@ public class Server implements Runnable {
 	
 	private final int MAX_ATTEMPTS = 5;
 	
-	public Server(int port) {
+	public Server(int port)
+	{
 		this.port = port;
-		try {
+		try
+		{
 			socket = new DatagramSocket(port);
-		} catch (SocketException e) {
+		}
+		catch (SocketException e)
+		{
 			e.printStackTrace();
 			return;
 		}
@@ -45,21 +50,25 @@ public class Server implements Runnable {
 		run.start();
 	}
 
-	public void run() {
+	public void run()
+	{
 		running = true;
 		System.out.println("Server started on port " + port);
 		manageClients();
 		receive();
 		Scanner scanner = new Scanner(System.in);
-		while (running) {
+		while (running)
+		{
 			String text = scanner.nextLine();
-			if (!text.startsWith("/")) {
+			if (!text.startsWith("/"))
+			{
 				sendToAll(new Message.Builder().setMessageType(Type.message)
 											   .setContent(text.getBytes()).build());
 				continue;
 			}
 			text = text.substring(1);
-			if (text.equals("raw")) {
+			if (text.equals("raw"))
+			{
 				raw = !raw;
 			}
 			else if (text.equals("exit"))
@@ -71,33 +80,52 @@ public class Server implements Runnable {
 			{
 				System.out.println("Clients:");
 				System.out.println("========");
-				for (int i = 0; i < clients.size(); i++) {
+				for (int i = 0; i < clients.size(); i++)
+				{
 					ServerClient c = clients.get(i);
 					System.out.println(c.name + "(" + c.getID() + "): " + c.address + ":" + c.port);
 				}
 				System.out.println("========");
-			} else if (text.startsWith("kick")) {
+			}
+			else if (text.startsWith("kick"))
+			{
 				String name = text.split(" ")[1];
 				UUID id = null;
-				try {
+				try
+				{
 					id = UUID.fromString(name);
-				} catch(IllegalArgumentException e) {
+				}
+				catch(IllegalArgumentException e)
+				{
 					
 				}
-				if (id != null) {
+				if (id != null)
+				{
 					boolean exists = false;
-					for (int i = 0; i < clients.size(); i++) {
-						if (clients.get(i).getID().equals(id)) {
+					for (int i = 0; i < clients.size(); i++)
+					{
+						if (clients.get(i).getID().equals(id))
+						{
 							exists = true;
 							break;
 						}
 					}
-					if (exists) disconnect(id, true);
-					else System.out.println("Client " + id + " doesn't exist. Check ID.");
-				} else {
-					for (int i = 0; i < clients.size(); i++) {
+					if (exists)
+					{
+						disconnect(id, true);
+					}
+					else
+					{
+						System.out.println("Client " + id + " doesn't exist. Check ID.");
+					}
+				}
+				else
+				{
+					for (int i = 0; i < clients.size(); i++)
+					{
 						ServerClient c = clients.get(i);
-						if (name.equals(c.name)) {
+						if (name.equals(c.name))
+						{
 							disconnect(c.getID(), true);
 							break;
 						}
@@ -108,27 +136,41 @@ public class Server implements Runnable {
 		scanner.close();
 	}
 	
-	private void manageClients() {
-		manage = new Thread("Manage") {
-			public void run() {
-				while (running) {
+	private void manageClients()
+	{
+		manage = new Thread("Manage")
+		{
+			public void run()
+			{
+				while (running == true)
+				{
 					sendToAll(new Message.Builder().setMessageType(Type.ping)
 												   .setContent("Server".getBytes()).build());
 					sendStatus();
-					try {
+					try
+					{
 						Thread.sleep(2000);
-					} catch (InterruptedException e) {
+					}
+					catch (InterruptedException e)
+					{
 						e.printStackTrace();
 					}
-					for (int i = 0; i < clients.size(); i++) {
+					for (int i = 0; i < clients.size(); i++)
+					{
 						ServerClient c = clients.get(i);
-						if (!clientResponse.contains(c.getID())) {
-							if (c.attempt >= MAX_ATTEMPTS) {
+						if (!clientResponse.contains(c.getID()))
+						{
+							if (c.attempt >= MAX_ATTEMPTS)
+							{
 								disconnect(c.getID(), false);
-							} else {
+							}
+							else
+							{
 								c.attempt++;
 							}
-						} else {
+						}
+						else
+						{
 							clientResponse.remove(c.getID());
 							c.attempt = 0;
 						}
@@ -139,30 +181,45 @@ public class Server implements Runnable {
 		manage.start();
 	}
 	
-	private void sendStatus() {
-		if (clients.size() <= 0) return;
+	private void sendStatus()
+	{
+		if (clients.size() <= 0)
+		{
+			return;
+		}
 		String users = "";
-		for (int i = 0; i < clients.size(); i++) {
+		for (int i = 0; i < clients.size(); i++)
+		{
 			users += clients.get(i).name + "\n";
 		}
 		sendToAll(new Message.Builder().setMessageType(Type.user)
 									   .setContent(users.getBytes()).build());
 	}
 	
-	private void receive() {
-		receive = new Thread("Receive") {
-			public void run() {
-				while (running) {
+	private void receive()
+	{
+		receive = new Thread("Receive")
+		{
+			public void run()
+			{
+				while (running == true)
+				{
 					byte[] data = new byte[1024];
 					DatagramPacket packet = new DatagramPacket(data, data.length);
-					try {
+					try
+					{
 						socket.receive(packet);
-					} catch (IOException e) {
+					}
+					catch (IOException e)
+					{
 						e.printStackTrace();
 					}
-					try {
+					try
+					{
 						process(packet);
-					} catch (IOException e) {
+					}
+					catch (IOException e)
+					{
 						e.printStackTrace();
 					}
 				}
@@ -171,11 +228,14 @@ public class Server implements Runnable {
 		receive.start();
 	}
 	
-	private void sendToAll(Message message) {
-		if (message.getType() == Type.message) {
+	private void sendToAll(Message message)
+	{
+		if (message.getType() == Type.message)
+		{
 			System.out.println(messageOps.getContentString(message));
 		}
-		for (int i = 0; i < clients.size(); i++) {
+		for (int i = 0; i < clients.size(); i++)
+		{
 			ServerClient client = clients.get(i);
 			send(message, client.address, client.port);
 		}
@@ -247,7 +307,10 @@ public class Server implements Runnable {
 	private void process(DatagramPacket packet) throws IOException
 	{
 		Message m = om.readValue(packet.getData(), Message.class);
-		if (raw) System.out.println(messageOps.getTypeString(m) + ": " + messageOps.getContentString(m));
+		if (raw) 
+		{
+			System.out.println(messageOps.getTypeString(m) + messageOps.getContentString(m));
+		}
 		switch(m.getType())
 		{
 		case control:
@@ -261,10 +324,17 @@ public class Server implements Runnable {
 					.setContent(c.getID().toString().getBytes()).build(),
 					packet.getAddress(), packet.getPort());
 			break;
-		case message: sendToAll(m); break;
-		case disconnect: disconnect(UUID.fromString(messageOps.getContentString(m)), true); break;
-		case ping: clientResponse.add(UUID.fromString(messageOps.getContentString(m))); break;
-		default: System.out.println(messageOps.getContentString(m));
+		case message:
+			sendToAll(m);
+			break;
+		case disconnect:
+			disconnect(UUID.fromString(messageOps.getContentString(m)), true);
+			break;
+		case ping:
+			clientResponse.add(UUID.fromString(messageOps.getContentString(m)));
+			break;
+		default:
+			System.out.println(messageOps.getContentString(m));
 		}
 	}
 	

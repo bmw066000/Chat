@@ -26,7 +26,8 @@ import javax.swing.text.DefaultCaret;
 import com.ben.chat.shared.Message;
 import com.ben.chat.shared.MessageOperations;
 
-public class ClientWindow extends JFrame implements Runnable {
+public class ClientWindow extends JFrame implements Runnable
+{
 	private static final long serialVersionUID = 1L;
 	
 	private JPanel contentPane;
@@ -40,11 +41,13 @@ public class ClientWindow extends JFrame implements Runnable {
 	
 	private OnlineUsers users;
 	
-	public ClientWindow(String name, String address, int port) {
+	public ClientWindow(String name, String address, int port)
+	{
 		setTitle("Chat Client");
 		client = new Client(name, address, port);
 		messageOps = new MessageOperations();
-		if (!client.openConnection(address)) {
+		if (!client.openConnection(address))
+		{
 			System.err.println("Connection failed!");
 			console("Connection failed!");
 		}
@@ -58,17 +61,28 @@ public class ClientWindow extends JFrame implements Runnable {
 		run.start();
 	}
 
-	public void run() {
+	public void run()
+	{
 		listen();
 	}
 	
-	private void send(String message) {
+	private void displayHelp()
+	{
+		console("Valid commands: /alias, /help");
+	}
+	
+	private void send(String message)
+	{
 		if (message.equals(""))
 		{
 			return;
 		}
 		if (message.startsWith("/"))
 		{
+			if (message.substring(1).toLowerCase().equals("help"))
+			{
+				displayHelp();
+			}
 			message = message.substring(1) + " " + client.getName();
 			client.send(new Message.Builder().setMessageType(Message.Type.control)
 											 .setContent(message.getBytes()).build());
@@ -112,9 +126,12 @@ public class ClientWindow extends JFrame implements Runnable {
 						break;
 					case disconnect:
 						break;
-					case message: console(messageOps.getContentString(message)); break;
-					case ping: client.send(new Message.Builder().setMessageType(Message.Type.ping)
-																.setContent(client.getID().toString().getBytes()).build());
+					case message:
+						console(messageOps.getContentString(message));
+						break;
+					case ping:
+						client.send(new Message.Builder().setMessageType(Message.Type.ping)
+														 .setContent(client.getID().toString().getBytes()).build());
 						break;
 					case control:
 						doOps(message);
